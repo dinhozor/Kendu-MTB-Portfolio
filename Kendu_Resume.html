@@ -1,0 +1,527 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kendu Nguyen - DH MTB Rider Portfolio</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <!-- Chosen Palette: Dynamic Blue & Orange -->
+    <!-- Application Structure Plan: A single-page dashboard designed for potential sponsors. The structure starts with a strong hero section with key highlights, followed by an interactive results section with a chart and filterable timeline to showcase progression. It concludes with skills and contact info. This non-linear, interactive approach allows sponsors to quickly grasp his potential and dive into the data that matters most, making it more engaging than a static document. New sections for LLM-powered tools enhance sponsor engagement. -->
+    <!-- Visualization & Content Choices: Report Info: Race results per year. Goal: Show progression and consistency. Viz: Interactive Bar Chart (Chart.js). Interaction: Year filter buttons update the chart and a detailed results list. Justification: A chart visually demonstrates his upward trend in performance, which is a key selling point for sponsors. The filters allow for easy exploration of his entire competitive history. Report Info: Social Media Reach. Goal: Showcase brand visibility potential. Viz: Integrated text in Professional Profile and Key Highlights. Interaction: Static display. Justification: Quantifiable metrics are best presented directly for impact. Report Info: Skills & Attributes. Goal: Inform about his capabilities. Viz: Styled HTML list with icons. Interaction: Static display. Justification: A clear, scannable list is most effective for this information. New: Sponsor Pitch and Social Media Post. Goal: Demonstrate communication and brand advocacy. Viz: Text generation via LLM. Interaction: Click buttons to generate text in a modal. Justification: Provides direct, actionable examples of how Kendu can represent a brand. -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #E6F3FF; /* Lighter, more vibrant blue-ish white */
+            color: #2F4F4F; /* Dark Slate Gray for text */
+        }
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 800px;
+            margin-left: auto;
+            margin-right: auto;
+            height: 300px;
+            max-height: 40vh;
+        }
+        @media (min-width: 768px) {
+            .chart-container {
+                height: 400px;
+            }
+        }
+        .nav-button {
+            transition: all 0.3s ease;
+        }
+        .nav-button.active {
+            background-color: #007BFF; /* Bright Blue */
+            color: #FFFFFF;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1);
+        }
+        .nav-button:not(.active):hover {
+            background-color: #89CFF0; /* Light Sky Blue */
+            color: #2F4F4F;
+        }
+        .card {
+            background-color: #FFFFFF;
+            border: 1px solid #D9ECFF; /* Lighter border color */
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.07), 0 4px 6px -4px rgba(0, 0, 0, 0.07);
+        }
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0,0,0,0.5);
+            align-items: center;
+            justify-content: center;
+        }
+        .modal-content {
+            background-color: #fefefe;
+            margin: auto;
+            padding: 2rem;
+            border-radius: 0.75rem;
+            width: 90%;
+            max-width: 600px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+            position: relative;
+            animation: fadeIn 0.3s ease-out;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .close-button {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+        }
+        .close-button:hover,
+        .close-button:focus {
+            color: black;
+            text-decoration: none;
+            cursor: pointer;
+        }
+        .spinner {
+            border: 4px solid rgba(0, 0, 0, 0.1);
+            border-left-color: #007BFF; /* Match primary button color */
+            border-radius: 50%;
+            width: 24px;
+            height: 24px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body class="antialiased">
+
+    <main class="container mx-auto p-4 sm:p-6 lg:p-8">
+        <header class="text-center mb-12">
+            <h1 class="text-4xl sm:text-5xl font-bold text-[#FF8C00]">Kendu Nguyen</h1>
+            <p class="text-xl sm:text-2xl mt-2 text-gray-700">Pilote de VTT Descente (DH MTB Rider)</p>
+        </header>
+
+        <section id="profile" class="mb-16">
+            <div class="max-w-4xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-8 items-center">
+                <div class="md:col-span-2">
+                    <h2 class="text-2xl font-bold mb-4 text-[#FF8C00]">Profil Professionnel</h2>
+                    <p class="text-gray-800 leading-relaxed">
+                        Talent dédié et en pleine ascension sur le circuit de VTT de Descente, j'ai démontré une habileté, une constance et une mentalité de gagnant remarquables depuis le début de la compétition en 2023. À seulement 13 ans, j'ai déjà obtenu plusieurs podiums, y compris des victoires récentes et des classements de premier plan dans des séries majeures. En tant que membre du Bike Club Verbier et de Swiss Cycling, je suis prêt à devenir une figure importante de la communauté DH, offrant une plateforme dynamique et authentique pour la promotion de marques et de produits.
+                        <br><br>
+                        Avec une présence active sur les réseaux sociaux, incluant **1 289 abonnés sur TikTok** (avec un record de 27,7k vues pour une vidéo) et **684 abonnés sur Instagram** (avec un record de 14k vues), je suis en mesure de générer une visibilité significative pour mes partenaires.
+                    </p>
+                </div>
+                <div class="text-center bg-white p-6 rounded-xl shadow-md border border-gray-200">
+                     <h3 class="text-xl font-bold mb-3 text-[#FF8C00]">Contact</h3>
+                     <p class="text-gray-700">Route de Sornard 66<br>1996 Sornard (Nendaz), Suisse</p>
+                     <p class="text-gray-700 mt-2">+41 79 423 21 12</p>
+                     <p class="text-gray-700 mt-2 break-all">21.kendu.nguyen@gmail.com</p>
+                     <p class="mt-4 text-lg font-semibold text-[#FF8C00]">@kendunguyen21</p>
+                </div>
+            </div>
+        </section>
+
+        <section id="highlights" class="mb-16 bg-white p-8 rounded-xl shadow-lg border border-gray-200">
+             <h2 class="text-2xl font-bold text-center mb-6 text-[#FF8C00]">Points Clés</h2>
+             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 text-center">
+                <div class="p-4">
+                    <span class="text-4xl">🏆</span>
+                    <h3 class="font-bold mt-2 text-lg">Champion Émergent</h3>
+                    <p class="text-sm text-gray-700 mt-1">Performeur de haut niveau constant, incluant une 1ère place en Allemagne (Mai 2025).</p>
+                </div>
+                <div class="p-4">
+                    <span class="text-4xl">🇨🇭</span>
+                    <h3 class="font-bold mt-2 text-lg">Talent Swiss Cycling</h3>
+                    <p class="text-sm text-gray-700 mt-1">Admis à Swiss Cycling MTB Gravity pour 2024 & 2025, reconnaissant un potentiel d'élite.</p>
+                </div>
+                <div class="p-4">
+                    <span class="text-4xl">🤝</span>
+                    <h3 class="font-bold mt-2 text-lg">Ambassadeur Dévoué</h3>
+                    <p class="text-sm text-gray-700 mt-1">Désireux de construire des relations solides avec les sponsors en présentant activement les produits.</p>
+                </div>
+                <div class="p-4">
+                    <span class="text-4xl">📱</span>
+                    <h3 class="font-bold mt-2 text-lg">Présence Active</h3>
+                    <p class="text-sm text-gray-700 mt-1">TikTok: 1 289 abonnés (max. 27,7k vues)<br>Instagram: 684 abonnés (max. 14k vues)</p>
+                </div>
+             </div>
+        </section>
+
+        <section id="llm-tools" class="mb-16 bg-white p-8 rounded-xl shadow-lg border border-gray-200">
+            <h2 class="text-2xl font-bold text-center mb-6 text-[#FF8C00]">Outils pour Sponsors & Médias</h2>
+            <p class="text-center max-w-3xl mx-auto text-gray-700 mb-8">
+                Ces outils utilisent l'intelligence artificielle pour générer rapidement du contenu pertinent, démontrant le potentiel de Kendu en tant qu'ambassadeur de marque.
+            </p>
+            <div class="flex flex-col sm:flex-row justify-center space-y-4 sm:space-y-0 sm:space-x-4">
+                <button id="generatePitchBtn" class="bg-[#007BFF] hover:bg-[#0056B3] text-white font-bold py-3 px-6 rounded-full shadow-lg transition-colors duration-300">
+                    ✨ Générer un Pitch Sponsor
+                </button>
+                <button id="generateSocialPostBtn" class="bg-[#007BFF] hover:bg-[#0056B3] text-white font-bold py-3 px-6 rounded-full shadow-lg transition-colors duration-300">
+                    ✨ Générer une Publication Sociale
+                </button>
+            </div>
+        </section>
+
+        <section id="results" class="mb-16">
+            <h2 class="text-3xl font-bold text-center mb-4 text-[#FF8C00]">Résultats & Progression</h2>
+            <p class="text-center max-w-3xl mx-auto text-gray-700 mb-8">
+                Cette section présente mes résultats en compétition. Le graphique illustre ma progression constante et mes performances de haut niveau. Utilisez les boutons pour filtrer les résultats par année et voir les détails de chaque course.
+            </p>
+            <div class="chart-container mb-8">
+                <canvas id="resultsChart"></canvas>
+            </div>
+            <div class="flex justify-center space-x-2 sm:space-x-4 mb-8">
+                <button class="nav-button font-semibold py-2 px-4 rounded-full text-sm sm:text-base" data-year="2025">2025</button>
+                <button class="nav-button font-semibold py-2 px-4 rounded-full text-sm sm:text-base" data-year="2024">2024</button>
+                <button class="nav-button font-semibold py-2 px-4 rounded-full text-sm sm:text-base" data-year="2023">2023</button>
+            </div>
+            <div id="results-list" class="max-w-4xl mx-auto">
+            </div>
+        </section>
+        
+        <section id="skills" class="bg-white p-8 rounded-xl shadow-lg border border-gray-200">
+            <h2 class="text-2xl font-bold text-center mb-6 text-[#FF8C00]">Compétences & Attributs</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <div class="p-4">
+                    <h3 class="font-bold text-lg">🚀 Compétences DH Exceptionnelles</h3>
+                    <p class="text-gray-700 mt-1">Maniement avancé du vélo, navigation technique sur sentier et contrôle de la vitesse.</p>
+                </div>
+                <div class="p-4">
+                    <h3 class="font-bold text-lg">🎯 Performance en Compétition</h3>
+                    <p class="text-gray-700 mt-1">Capacité prouvée à performer sous pression et à obtenir des résultats de haut niveau constants.</p>
+                </div>
+                <div class="p-4">
+                    <h3 class="font-bold text-lg">💪 Discipline & Entraînement</h3>
+                    <p class="text-gray-700 mt-1">Engagement fort envers un entraînement physique rigoureux et le développement des compétences.</p>
+                </div>
+                <div class="p-4">
+                    <h3 class="font-bold text-lg">🌟 Représentation de Marque</h3>
+                    <p class="text-gray-700 mt-1">Enthousiaste à l'idée de présenter des produits et de promouvoir positivement les marques sponsors.</p>
+                </div>
+                <div class="p-4">
+                    <h3 class="font-bold text-lg">📈 Engagement Médiatique</h3>
+                    <p class="text-gray-700 mt-1">Présence active sur les plateformes sociales, offrant des opportunités de contenu organique.</p>
+                </div>
+                <div class="p-4">
+                    <h3 class="font-bold text-lg">❤️ Résilience & Passion</h3>
+                    <p class="text-gray-700 mt-1">Passion profonde pour le VTT DH, moteur d'une amélioration continue et d'une attitude positive.</p>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <footer class="text-center p-6 mt-8 text-gray-600">
+        <p>&copy; 2025 Kendu Nguyen - Tous droits réservés.</p>
+    </footer>
+
+    <!-- Modal for LLM Generated Content -->
+    <div id="llmModal" class="modal flex">
+        <div class="modal-content">
+            <span class="close-button" id="closeModalBtn">&times;</span>
+            <h3 id="modalTitle" class="text-2xl font-bold mb-4 text-[#FF8C00]"></h3>
+            <div id="modalContent" class="text-gray-800 leading-relaxed">
+                <div class="flex justify-center items-center h-32" id="loadingSpinner">
+                    <div class="spinner"></div>
+                </div>
+                <p id="generatedText" class="hidden"></p>
+            </div>
+            <button id="copyToClipboardBtn" class="mt-4 bg-gray-200 hover:bg-gray-300 text-gray-800 font-bold py-2 px-4 rounded-full transition-colors duration-300">
+                Copier le texte
+            </button>
+        </div>
+    </div>
+
+    <script>
+        const allResults = {
+            '2025': [
+                { event: 'Hot Trail Series Homberg', rank: 3, category: 'U15' },
+                { event: 'Hot Trail Series Todtnau, Germany', rank: 1, category: 'U15' },
+                { event: 'Hot Trail Series Lenzerheide', rank: 2, category: 'U15' },
+                { event: 'Hot Trail Series Wiriehorn', rank: 2, category: 'U15' }, // Added Wiriehorn result
+            ],
+            '2024': [
+                { event: 'Hot Trail Series St-Luc', rank: 2, category: 'U15' },
+                { event: 'Hot Trail Series Wiriehorn', rank: 3, category: 'U15' },
+                { event: 'Hot Trail Series Todtnau', rank: 7, category: 'U15' },
+                { event: 'Hot Trail Series Homberg', rank: 2, category: 'U15' },
+                { event: 'Classement Général Hot Trail Series', rank: 3, category: 'U15' },
+            ],
+            '2023': [
+                { event: 'Hot Trail Series St-Luc', rank: 9, category: 'U15' },
+                { event: 'Hot Trail Series Les Crosets', rank: 6, category: 'U15' },
+                { event: 'Hot Trail Series La Berra', rank: 11, category: 'U15' },
+                { event: 'Hot Trail Series Leysin', rank: 12, category: 'U15' },
+                { event: 'Hot Trail Series La Robella', rank: 6, category: 'U15' },
+                { event: 'Classement Général Hot Trail Series', rank: 11, category: 'U15' },
+            ]
+        };
+
+        const resultsListContainer = document.getElementById('results-list');
+        const navButtons = document.querySelectorAll('.nav-button');
+        const ctx = document.getElementById('resultsChart').getContext('2d');
+        let resultsChart;
+
+        const generatePitchBtn = document.getElementById('generatePitchBtn');
+        const generateSocialPostBtn = document.getElementById('generateSocialPostBtn');
+        const llmModal = document.getElementById('llmModal');
+        const closeModalBtn = document.getElementById('closeModalBtn');
+        const modalTitle = document.getElementById('modalTitle');
+        const generatedText = document.getElementById('generatedText');
+        const loadingSpinner = document.getElementById('loadingSpinner');
+        const copyToClipboardBtn = document.getElementById('copyToClipboardBtn');
+
+        function getRankColor(rank) {
+            if (rank === 1) return 'rgba(255, 215, 0, 0.8)'; // Gold
+            if (rank === 2) return 'rgba(192, 192, 192, 0.8)'; // Silver
+            if (rank === 3) return 'rgba(205, 127, 50, 0.8)'; // Bronze
+            return 'rgba(0, 123, 255, 0.6)'; // Blue for others
+        }
+
+        function createChart(year) {
+            const yearData = allResults[year].filter(r => !r.event.toLowerCase().includes('général')).reverse();
+            const labels = yearData.map(r => r.event.length > 20 ? r.event.substring(0, 18) + '...' : r.event);
+            const data = yearData.map(r => r.rank);
+            const backgroundColors = yearData.map(r => getRankColor(r.rank));
+
+            if (resultsChart) {
+                resultsChart.destroy();
+            }
+
+            resultsChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: `Classement en ${year}`,
+                        data: data,
+                        backgroundColor: backgroundColors,
+                        borderColor: backgroundColors.map(c => c.replace('0.6', '1').replace('0.8', '1')),
+                        borderWidth: 1,
+                        borderRadius: 5,
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            reverse: true,
+                            title: {
+                                display: true,
+                                text: 'Classement (Position)',
+                                font: {
+                                    weight: 'bold'
+                                }
+                            },
+                            ticks: {
+                                stepSize: 1
+                            }
+                        },
+                        x: {
+                             title: {
+                                display: true,
+                                text: 'Événement',
+                                font: {
+                                    weight: 'bold'
+                                }
+                            }
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            display: false
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    let label = context.dataset.label || '';
+                                    if (label) {
+                                        label += ': ';
+                                    }
+                                    if (context.parsed.y !== null) {
+                                        label += `${context.parsed.y}e place`;
+                                    }
+                                    return label;
+                                },
+                                title: function(context) {
+                                    return yearData[context[0].dataIndex].event;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        function displayResults(year) {
+            const yearData = allResults[year];
+            resultsListContainer.innerHTML = '';
+
+            const grid = document.createElement('div');
+            grid.className = 'grid grid-cols-1 md:grid-cols-2 gap-4';
+
+            yearData.forEach(result => {
+                const card = document.createElement('div');
+                card.className = 'card p-4 rounded-lg flex items-center justify-between';
+                
+                const rankText = result.rank === 1 ? '🥇 1ère' : result.rank === 2 ? '🥈 2ème' : result.rank === 3 ? '🥉 3ème' : `${result.rank}e`;
+
+                card.innerHTML = `
+                    <div>
+                        <p class="font-bold text-gray-800">${result.event}</p>
+                        <p class="text-sm text-gray-700">Catégorie: ${result.category}</p>
+                    </div>
+                    <div class="text-xl sm:text-2xl font-bold text-[#FF8C00] whitespace-nowrap pl-4">${rankText}</div>
+                `;
+                grid.appendChild(card);
+            });
+            resultsListContainer.appendChild(grid);
+        }
+
+        function setActiveYear(year) {
+            navButtons.forEach(button => {
+                if (button.dataset.year === year) {
+                    button.classList.add('active');
+                } else {
+                    button.classList.remove('active');
+                }
+            });
+            displayResults(year);
+            createChart(year);
+        }
+
+        navButtons.forEach(button => {
+            button.addEventListener('click', () => {
+                setActiveYear(button.dataset.year);
+            });
+        });
+
+        closeModalBtn.addEventListener('click', () => {
+            llmModal.style.display = 'none';
+        });
+
+        window.addEventListener('click', (event) => {
+            if (event.target === llmModal) {
+                llmModal.style.display = 'none';
+            }
+        });
+
+        copyToClipboardBtn.addEventListener('click', () => {
+            const textToCopy = generatedText.textContent;
+            const tempTextArea = document.createElement('textarea');
+            tempTextArea.value = textToCopy;
+            document.body.appendChild(tempTextArea);
+            tempTextArea.select();
+            document.execCommand('copy');
+            document.body.removeChild(tempTextArea);
+            copyToClipboardBtn.textContent = 'Copié !';
+            setTimeout(() => {
+                copyToClipboardBtn.textContent = 'Copier le texte';
+            }, 2000);
+        });
+
+        async function callGeminiAPI(prompt, title) {
+            llmModal.style.display = 'flex';
+            modalTitle.textContent = title;
+            loadingSpinner.classList.remove('hidden');
+            generatedText.classList.add('hidden');
+            copyToClipboardBtn.classList.add('hidden');
+
+            // IMPORTANT: Replace "YOUR_GEMINI_API_KEY_HERE" with your actual Gemini API Key
+            // Get your API key from https://ai.google.dev/
+            const apiKey = "AIzaSyDYgELDdye6KGg3bWqCdHC1kB5YN3KTUs4"; 
+            
+            if (!apiKey || apiKey === "YOUR_GEMINI_API_KEY_HERE") {
+                generatedText.textContent = "Erreur: Clé API Gemini manquante ou incorrecte. Veuillez la remplacer dans le code.";
+                loadingSpinner.classList.add('hidden');
+                generatedText.classList.remove('hidden');
+                return; // Stop execution if API key is not set
+            }
+
+            const payload = {
+                contents: [{ role: "user", parts: [{ text: prompt }] }],
+            };
+            const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=${apiKey}`;
+
+            let retries = 0;
+            const maxRetries = 3;
+            let delay = 1000;
+
+            while (retries < maxRetries) {
+                try {
+                    const response = await fetch(apiUrl, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload)
+                    });
+                    const result = await response.json();
+                    if (result.candidates && result.candidates.length > 0 &&
+                        result.candidates[0].content && result.candidates[0].content.parts &&
+                        result.candidates[0].content.parts.length > 0) {
+                        const text = result.candidates[0].content.parts[0].text;
+                        generatedText.textContent = text;
+                        loadingSpinner.classList.add('hidden');
+                        generatedText.classList.remove('hidden');
+                        copyToClipboardBtn.classList.remove('hidden');
+                        break;
+                    } else {
+                        generatedText.textContent = "Erreur: Contenu non généré. Veuillez réessayer.";
+                        loadingSpinner.classList.add('hidden');
+                        generatedText.classList.remove('hidden');
+                        break;
+                    }
+                } catch (error) {
+                    retries++;
+                    if (retries < maxRetries) {
+                        await new Promise(res => setTimeout(res, delay));
+                        delay *= 2;
+                    } else {
+                        generatedText.textContent = `Erreur lors de la connexion à l'IA: ${error.message}. Veuillez réessayer.`;
+                        loadingSpinner.classList.add('hidden');
+                        generatedText.classList.remove('hidden');
+                        break;
+                    }
+                }
+            }
+        }
+
+        generatePitchBtn.addEventListener('click', () => {
+            const latestResults = allResults['2025'].map(r => `${r.event}: ${r.rank}e place en ${r.category}`).join(', ');
+            const prompt = `Rédigez un court pitch (environ 100 mots) pour un sponsor de vélo ou de pièces de vélo. Kendu Nguyen est un pilote de VTT de descente de 13 ans de Suisse. Il a 1289 abonnés sur TikTok (max 27.7k vues) et 684 abonnés sur Instagram (max 14k vues). Ses récents résultats en 2025 incluent: ${latestResults}. Il est membre du Bike Club Verbier et de Swiss Cycling. Mettez en avant son potentiel, sa visibilité et son dévouement.`;
+            callGeminiAPI(prompt, "Pitch Sponsor Généré");
+        });
+
+        generateSocialPostBtn.addEventListener('click', () => {
+            const latestResult = allResults['2025'].find(r => r.rank === 1);
+            let resultText = '';
+            if (latestResult) {
+                resultText = `Je viens de décrocher une incroyable 1ère place à ${latestResult.event} en catégorie ${latestResult.category} !`;
+            } else {
+                resultText = `J'ai eu une excellente saison 2025 avec de solides performances.`;
+            }
+            const prompt = `Rédigez un court post pour les réseaux sociaux (TikTok/Instagram, max 200 caractères) pour Kendu Nguyen, un pilote de VTT de descente. Il devrait être motivant et inciter à soutenir sa carrière. Incluez son meilleur résultat récent de l'année 2025 (${resultText}) et un appel à l'action pour les sponsors. Utilisez des emojis pertinents.`;
+            callGeminiAPI(prompt, "Publication Sociale Générée");
+        });
+
+        window.onload = function() {
+            setActiveYear('2025');
+        };
+    </script>
+</body>
+</html>
